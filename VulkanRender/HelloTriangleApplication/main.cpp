@@ -1,5 +1,15 @@
 #pragma once
+#define GLFW_INCLUDE_VULKAN
+#include <GLFW/glfw3.h>
+#pragma once
+
 #include "TriangleApp.h"
+
+#include <iostream>
+#include <stdexcept>
+#include <functional>
+#include <cstdlib>
+
 
 int main()
 {

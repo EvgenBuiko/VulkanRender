@@ -1,24 +1,21 @@
-#pragma once
-#include <vulkan/vulkan.h>
-
-#include <iostream>
-#include <stdexcept>
-#include <functional>
-#include <cstdlib>
+#define GLFW_INCLUDE_VULKAN
+#include <GLFW/glfw3.h>
 
 class TriangleApp
 {
 public:
-	void run()
-	{
-		initVulkan();
-		mainLoop();
-		cleanup();
-	}
+
+	TriangleApp();
+	~TriangleApp();
+
+	void run();
 
 private:
+	class Private;
+	Private* d;
+	
+	void initWindow();
 	void initVulkan();
 	void mainLoop();
 	void cleanup();
 };
-
