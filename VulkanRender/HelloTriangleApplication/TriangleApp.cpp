@@ -1,6 +1,16 @@
 #include "TriangleApp.h"
 #include <stdexcept>
+#include <vector>
+#include <cstring>
+#include <iostream>
 
+static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
+	VkDebugUtilsMessageTypeFlagsEXT messageType, const VkDebugUtilsMessengerCallbackDataEXT* callbackData,
+	void* userData)
+{
+	std::cerr << "Validation layer: " << callbackData->pMessage << std::endl;
+	return VK_FALSE;
+}
 
 class TriangleApp::Private
 {
@@ -12,10 +22,14 @@ public:
 		WindowWidth = 800;
 		WindowHeight = 600;
 	}
+
 	~Private()
 	{ }
+
 	VkResult createVkInstance()
 	{
+		if (enableValidationLayers && !checkValidationLayerSupport())
+			throw std::runtime_error("Validation layers enabled but not available");
 		VkApplicationInfo appInfo = {};
 		appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
 		appInfo.pApplicationName = "Hello triangle";
@@ -30,13 +44,60 @@ public:
 		glfwExt = (char**)glfwGetRequiredInstanceExtensions(&glfwExtCount);
 		createInfo.enabledExtensionCount = glfwExtCount;
 		createInfo.ppEnabledExtensionNames = glfwExt;
-		createInfo.enabledLayerCount = 0;
+		if (enableValidationLayers)
+		{
+			createInfo.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
+			createInfo.ppEnabledLayerNames = validationLayers.data();
+		} 
+		else createInfo.enabledLayerCount = 0;
 		return vkCreateInstance(&createInfo, nullptr, &instance);
 	}
+
+	bool checkValidationLayerSupport()
+	{
+		uint32_t layersCount = 0;
+		vkEnumerateInstanceLayerProperties(&layersCount, nullptr);
+		std::vector<VkLayerProperties> availableLayers(layersCount);
+		vkEnumerateInstanceLayerProperties(&layersCount, availableLayers.data());
+		for (const char* layerName : validationLayers)
+		{
+			bool layerFound = false;
+			for (VkLayerProperties layer : availableLayers)
+				if (strcmp(layerName, layer.layerName) == 0)
+					layerFound = true;
+			if (!layerFound)
+				return false;
+		}
+		return true;
+	}
+
+	std::vector<const char*> getRequiredExtensions()
+	{
+		uint32_t glfwExtensionsCount = 0;
+		const char** glfwExtensions;
+		glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionsCount);
+		std::vector<const char*> retExtensions(glfwExtensions, glfwExtensions + glfwExtensionsCount);
+		if (enableValidationLayers)
+			retExtensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
+		return retExtensions;
+	}
+
 	GLFWwindow* window;
 	VkInstance instance;
 	int WindowWidth;
 	int WindowHeight;
+
+	// configuration variables
+	const std::vector<const char*> validationLayers =
+	{
+		"VK_LAYER_KHRONOS_validation"
+	};
+
+#ifdef _DEBUG
+	const bool enableValidationLayers = true;
+#else
+	const bool enableValidationLayers = false;
+#endif // _DEBUG
 
 };
 
@@ -73,6 +134,20 @@ void TriangleApp::initVulkan()
 {
 	if (d->createVkInstance() != VK_SUCCESS)
 		throw std::runtime_error("Failed to create instance!");
+
+	uint32_t extensionsCount = 0;
+	vkEnumerateInstanceExtensionProperties(nullptr, &extensionsCount, nullptr);
+	std::vector<VkExtensionProperties> extensions(extensionsCount);
+	vkEnumerateInstanceExtensionProperties(nullptr, &extensionsCount, extensions.data());
+
+#ifdef _DEBUG
+	std::cout << "Available extensions:" << std::endl << std::endl;
+	for (VkExtensionProperties extension : extensions)
+		printf("Name: %s\nVersion: %d\n\n", extension.extensionName, extension.specVersion);
+#endif // _DEBUG
+
+	
+	// ...
 }
 
 void TriangleApp::mainLoop()
@@ -83,6 +158,7 @@ void TriangleApp::mainLoop()
 
 void TriangleApp::cleanup()
 {
+	vkDestroyInstance(d->instance, nullptr);
 	glfwDestroyWindow(d->window);
 	glfwTerminate();
 }
