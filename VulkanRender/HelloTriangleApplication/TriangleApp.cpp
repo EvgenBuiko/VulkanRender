@@ -8,7 +8,8 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(VkDebugUtilsMessageSeverityF
 	VkDebugUtilsMessageTypeFlagsEXT messageType, const VkDebugUtilsMessengerCallbackDataEXT* callbackData,
 	void* userData)
 {
-	std::cerr << "Validation layer: " << callbackData->pMessage << std::endl;
+	if (messageSeverity >= VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT)
+		std::cerr << "Validation layer: " << callbackData->pMessage << std::endl;
 	return VK_FALSE;
 }
 
@@ -39,11 +40,9 @@ public:
 		appInfo.apiVersion = VK_API_VERSION_1_0;
 		VkInstanceCreateInfo createInfo = {};
 		createInfo.pApplicationInfo = &appInfo;
-		uint32_t glfwExtCount = 0;
-		char** glfwExt;
-		glfwExt = (char**)glfwGetRequiredInstanceExtensions(&glfwExtCount);
-		createInfo.enabledExtensionCount = glfwExtCount;
-		createInfo.ppEnabledExtensionNames = glfwExt;
+		auto glfwExt = getRequiredExtensions();
+		createInfo.enabledExtensionCount = static_cast<uint32_t>(glfwExt.size());
+		createInfo.ppEnabledExtensionNames = glfwExt.data();
 		if (enableValidationLayers)
 		{
 			createInfo.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
@@ -84,6 +83,7 @@ public:
 
 	GLFWwindow* window;
 	VkInstance instance;
+	VkDebugUtilsMessengerEXT debugMessenger;
 	int WindowWidth;
 	int WindowHeight;
 
@@ -135,12 +135,12 @@ void TriangleApp::initVulkan()
 	if (d->createVkInstance() != VK_SUCCESS)
 		throw std::runtime_error("Failed to create instance!");
 
+#ifdef _DEBUG
 	uint32_t extensionsCount = 0;
 	vkEnumerateInstanceExtensionProperties(nullptr, &extensionsCount, nullptr);
 	std::vector<VkExtensionProperties> extensions(extensionsCount);
 	vkEnumerateInstanceExtensionProperties(nullptr, &extensionsCount, extensions.data());
 
-#ifdef _DEBUG
 	std::cout << "Available extensions:" << std::endl << std::endl;
 	for (VkExtensionProperties extension : extensions)
 		printf("Name: %s\nVersion: %d\n\n", extension.extensionName, extension.specVersion);
@@ -148,6 +148,26 @@ void TriangleApp::initVulkan()
 
 	
 	// ...
+}
+
+void TriangleApp::setupDebugMessenger()
+{
+	if (!d->enableValidationLayers) 
+		return;
+
+	VkDebugUtilsMessengerCreateInfoEXT createInfo = {};
+	createInfo.sType =
+		VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
+	createInfo.messageSeverity =
+		VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT |
+		VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT |
+		VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
+	createInfo.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT
+		| VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT |
+		VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
+	createInfo.pfnUserCallback = debugCallback;
+	createInfo.pUserData = nullptr;
+
 }
 
 void TriangleApp::mainLoop()
