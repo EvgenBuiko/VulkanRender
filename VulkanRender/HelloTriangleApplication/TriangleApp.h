@@ -16,7 +16,6 @@ private:
 	
 	void initWindow();
 	void initVulkan();
-	void setupDebugMessenger();
 	void mainLoop();
 	void cleanup();
 };

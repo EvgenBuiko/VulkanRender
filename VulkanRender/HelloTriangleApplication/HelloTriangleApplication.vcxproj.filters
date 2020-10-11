@@ -21,9 +21,15 @@
     <ClCompile Include="TriangleApp.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="VulkanApp.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="TriangleApp.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="VulkanApp.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
