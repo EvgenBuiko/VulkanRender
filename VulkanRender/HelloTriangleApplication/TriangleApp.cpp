@@ -1,12 +1,10 @@
 #include "TriangleApp.h"
 #include <stdexcept>
-#include <vector>
 #include <cstring>
 #include <iostream>
 #include <map>
-#include "VulkanApp.h"
 
-static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
+/*static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
 	VkDebugUtilsMessageTypeFlagsEXT messageType, const VkDebugUtilsMessengerCallbackDataEXT* callbackData,
 	void* userData)
 {
@@ -32,7 +30,7 @@ void DestroyDebugUtilsMessenger(VkInstance instance, VkDebugUtilsMessengerEXT ca
 	auto func = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkDestroyDebugUtilsMessengerEXT");
 	if (func)
 		func(instance, callback, pAllocator);
-}
+}*/
 
 class TriangleApp::Private
 {
@@ -40,9 +38,9 @@ public:
 	Private()
 	{
 		Window = nullptr;
-		Instance = NULL;
-		DebugMessenger = NULL;
-		PhysicalDevice = VK_NULL_HANDLE;
+// 		Instance = NULL;
+// 		DebugMessenger = NULL;
+// 		PhysicalDevice = VK_NULL_HANDLE;
 		WindowWidth = 800;
 		WindowHeight = 600;
 	}
@@ -50,7 +48,7 @@ public:
 	~Private()
 	{ }
 
-	VkResult createVkInstance();
+	/*VkResult createVkInstance();
 	bool checkValidationLayerSupport();
 	std::vector<const char*> getRequiredExtensions();
 	void setupDebugMessenger();
@@ -60,15 +58,16 @@ public:
 	bool isDeviceSuitable(VkPhysicalDevice device);
 	void createLogicalDevice();
 
-	GLFWwindow* Window;
 	VkInstance Instance;
 	VkDevice Device;
 	VkQueue GraphicsQueue;
 	VkDebugUtilsMessengerEXT DebugMessenger;
-	VkPhysicalDevice PhysicalDevice;
+	VkPhysicalDevice PhysicalDevice;*/
+
+	GLFWwindow* Window;
 	int WindowWidth;
 	int WindowHeight;
-
+	/*
 	// configuration variables
 	const std::vector<const char*> validationLayers =
 	{
@@ -80,7 +79,7 @@ public:
 #else
 	const bool enableValidationLayers = false;
 #endif // _DEBUG
-
+	*/
 };
 
 TriangleApp::TriangleApp()
@@ -96,9 +95,21 @@ TriangleApp::~TriangleApp()
 void TriangleApp::run()
 {
 	initWindow();
-	initVulkan();
+	InitVulkan();
+	//initVulkan();
 	mainLoop();
 	cleanup();
+}
+
+std::vector<const char*> TriangleApp::GetRequiredExtensions()
+{
+	uint32_t glfwExtensionsCount = 0;
+	const char** glfwExtensions;
+	glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionsCount);
+	std::vector<const char*> retExtensions(glfwExtensions, glfwExtensions + glfwExtensionsCount);
+	if (enableValidationLayers)
+		retExtensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
+	return retExtensions;
 }
 
 void TriangleApp::initWindow()
@@ -109,10 +120,9 @@ void TriangleApp::initWindow()
 	glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 
 	d->Window = glfwCreateWindow( d->WindowWidth, d->WindowHeight, "Vulkan", nullptr, nullptr);
-
 }
 
-void TriangleApp::initVulkan()
+/*void TriangleApp::initVulkan()
 {
 	if (d->createVkInstance() != VK_SUCCESS)
 		throw std::runtime_error("Failed to create instance!");
@@ -322,7 +332,7 @@ void TriangleApp::Private::createLogicalDevice()
 		throw std::runtime_error("Failed to create logical device!");
 	
 	vkGetDeviceQueue(Device, indices.graphicsFamily.value(), 0, &GraphicsQueue);
-}
+}*/
 
 void TriangleApp::mainLoop()
 {
@@ -332,12 +342,7 @@ void TriangleApp::mainLoop()
 
 void TriangleApp::cleanup()
 {
-	if (d->enableValidationLayers)
-	{
-		DestroyDebugUtilsMessenger(d->Instance, d->DebugMessenger, nullptr);
-	}
-	vkDestroyInstance(d->Instance, nullptr);
-	vkDestroyDevice(d->Device, nullptr);
+	CleanupVulkan();
 	glfwDestroyWindow(d->Window);
 	glfwTerminate();
 }
