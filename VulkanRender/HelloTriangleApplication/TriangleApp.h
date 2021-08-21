@@ -3,25 +3,6 @@
 #include "VulkanApp.h"
 #include <vector>
 
-/*class TriangleApp
-{
-public:
-
-	TriangleApp();
-	~TriangleApp();
-
-	void run();
-
-private:
-	class Private;
-	Private* d;
-	
-	void initWindow();
-	void initVulkan();
-	void mainLoop();
-	void cleanup();
-};*/
-
 class TriangleApp : public VulkanApp
 {
 public:
